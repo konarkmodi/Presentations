@@ -1,0 +1,86 @@
+Execution of nodes (run shell cmd with wait,logging etc.)
+Ability to rebuild sub-graph in parent DAG during execution
+Ability to manual execute nodes or sub-graph while parent graph is running
+Suspend graph execution while waiting for external event
+List job queue and job details
+Dependency based job-scheduler
+Retry individual tasks from failure 
+Send email reports on job completion and failure, keeps track of your tasks' stdout and stderr, and persists its information in various backends so you don't have to worry about losing your data
+Fanout workload to multiple systems
+
+
+Expectations from talk:
+* Definition of Job / Task.
+* Design Choices : Why we need to think beyond crons.
+* Tools available
+* Why we use Celery
+* Various types of workflows.
+* Tools available 
+* Celery as a Choice
+* Architecture of Celery
+
+Design Choices
+* Scheduling Capabilities    
+	* Scheduling not just based on time but the nature of task too.
+		* Cron based syntax.
+		* Humanized form of entries.
+		* Interval based.
+		* Immediate execution
+		* Countdown based
+* Task Management(http://docs.celeryproject.org/en/latest/userguide/monitoring.html):
+	* Routing of tasks	
+		* Priroty of execution
+		* Based on OS
+		* Based on hardware-capabilities
+	* Conflict Management
+	* Task state-management :
+		* Sent / Received /  Started / Succeeded / Failed / Revoked / Retired		
+	* Controls : Pause, Kill, Delete
+* Worker-Management:
+    * Basic Tasks : Start / Stop (Warm-Shutdown / Cold-Shutdown / USR1(with traceback) / USR2) / Restart
+	* Time-Limits (Soft / Hard)
+	* Auto Scale-up and Scale-Out and also shrink to normal	 
+	* Fanout workload to multiple systems
+* Reporting
+* Historical trends
+* Easy to adapt
+
+Types of workflows :
+* Chains  
+  * Link tasks together (Task1|Output -> Input|Task2 -> Input|Task3)
+  * Sample : result_chain = chain(add.s(4,4),add.s(5))()
+* Groups
+  * Take a list of tasks that should be applied in parallel
+  * (Task1, Task2,.....,TaskN)
+  * result_group = group(add.s(2, 2), add.s(4, 4))
+* Chord
+  * ((Task1, Task2,.....,TaskN)|Output - > [Input](TaskX))
+* Chunks
+  * Divide the work into chunks, execute in parallel.
+  * res_chunks = add.chunks(zip(range(100), range(100)), 10)()
+* Task - Trees
+  * Import image
+  * Sample Code
+	from celery_tasktree import task_with_callbacks, TaskTree
+
+	@task_with_callbacks
+	def some_action(...):
+		...
+
+	def execute_actions():
+		tree = TaskTree()
+		task0 = tree.add_task(some_action, args=[...], kwargs={...})
+		task1 = tree.add_task(some_action, args=[...], kwargs={...})
+		task10 = task1.add_task(some_action, args=[...], kwargs={...})
+		task11 = task1.add_task(some_action, args=[...], kwargs={...})
+		task110 = task11.add_task(some_action, args=[...], kwargs={...})
+		async_result = tree.apply_async()
+		return async_result		
+
+Few Tools Available:
+* Celery (Distributed asynchronous task processing)
+* Dagobah
+* Chronos 
+* Luigi
+* Azkaban
+
